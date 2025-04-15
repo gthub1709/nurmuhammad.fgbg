@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вопросы</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1e1e1e;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            color: #fff;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #2d2d2d;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            width: 400px;
+        }
+        .popup h2 {
+            margin-top: 0;
+            color: #fff;
+            font-size: 16px;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            margin: 10px 0;
+            background: #3d3d3d;
+            border: 1px solid #4d4d4d;
+            color: #fff;
+            border-radius: 4px;
+        }
+        .button-group {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .ok-button {
+            background: #0078d4;
+            color: white;
+        }
+        .cancel-button {
+            background: #3d3d3d;
+            color: white;
+        }
+        .game-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            max-width: 300px;
+            margin: 20px auto;
+        }
+        .cell {
+            aspect-ratio: 1;
+            background: #3d3d3d;
+            border: none;
+            color: white;
+            font-size: 2em;
+            cursor: pointer;
+        }
+        .cell:hover {
+            background: #4d4d4d;
+        }
+        .game-result {
+            text-align: center;
+            margin-top: 10px;
+            color: #fff;
+        }
+        h1 {
+            color: #fff;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        #result {
+            margin-top: 10px;
+            color: #fff;
+            text-align: center;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Крестики-нолики</h1>
+        <div class="game-container" id="gameBoard">
+            <button class="cell" onclick="makeMove(0)"></button>
+            <button class="cell" onclick="makeMove(1)"></button>
+            <button class="cell" onclick="makeMove(2)"></button>
+            <button class="cell" onclick="makeMove(3)"></button>
+            <button class="cell" onclick="makeMove(4)"></button>
+            <button class="cell" onclick="makeMove(5)"></button>
+            <button class="cell" onclick="makeMove(6)"></button>
+            <button class="cell" onclick="makeMove(7)"></button>
+            <button class="cell" onclick="makeMove(8)"></button>
+        </div>
+        <div class="game-result" id="gameResult"></div>
+        <button onclick="resetGame()" class="ok-button" style="display: block; margin: 20px auto;">Новая игра</button>
+    </div>
+
+    <div id="questionPopup" class="popup" style="display: none;">
+        <h2 id="questionText"></h2>
+        <input type="text" id="answerInput" placeholder="Введите ответ">
+        <div id="result"></div>
+        <div class="button-group">
+            <button class="cancel-button" onclick="skipQuestion()">Отмена</button>
+            <button class="ok-button" onclick="submitAnswer()">OK</button>
+        </div>
+    </div>
+
+    <script>
+        // Tic-Tac-Toe game
+        let currentPlayer = 'X';
+        let gameBoard = ['', '', '', '', '', '', '', '', ''];
+        let gameActive = true;
+
+        function makeMove(index) {
+            if (gameBoard[index] === '' && gameActive) {
+                gameBoard[index] = currentPlayer;
+                document.getElementsByClassName('cell')[index].textContent = currentPlayer;
+                
+                if (checkWin()) {
+                    document.getElementById('gameResult').textContent = `Игрок ${currentPlayer} победил!`;
+                    gameActive = false;
+                    showQuestion();
+                } else if (gameBoard.every(cell => cell !== '')) {
+                    document.getElementById('gameResult').textContent = 'Ничья!';
+                    gameActive = false;
+                    showQuestion();
+                } else {
+                    currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+                }
+            }
+        }
+
+        function checkWin() {
+            const winPatterns = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8],
+                [0, 3, 6], [1, 4, 7], [2, 5, 8],
+                [0, 4, 8], [2, 4, 6]
+            ];
+
+            return winPatterns.some(pattern => {
+                return pattern.every(index => gameBoard[index] === currentPlayer);
+            });
+        }
+
+        function resetGame() {
+            gameBoard = ['', '', '', '', '', '', '', '', ''];
+            gameActive = true;
+            currentPlayer = 'X';
+            document.getElementById('gameResult').textContent = '';
+            Array.from(document.getElementsByClassName('cell')).forEach(cell => {
+                cell.textContent = '';
+            });
+            showQuestion();
+        }
+
+        // Questions system
+        const questions = [
+            {
+                question: 'Если бы вы были носком, каким бы были? 🧦',
+                responses: [
+                    'Вы - носок с дыркой! Загадочная личность! 🕳️',
+                    'Вы - теплый шерстяной носок! Уютный человек! 🧶',
+                    'Вы - носок с рисунком! Творческая натура! 🎨',
+                    'Вы - спортивный носок! Активный тип! 🏃‍♂️',
+                    'Вы - носок-невидимка! Мастер маскировки! 🕵️‍♂️'
+                ]
+            },
+            {
+                question: 'Если бы вы были овощем, каким бы были? 🥦',
+                responses: [
+                    'Вы - брокколи! Здоровый образ жизни! 🥦',
+                    'Вы - картошка! Универсальный человек! 🥔',
+                    'Вы - огурец! Свежий взгляд на жизнь! 🥒',
+                    'Вы - помидор! Яркая личность! 🍅',
+                    'Вы - морковка! Прямой характер! 🥕'
+                ]
+            },
+            {
+                question: 'Какой самый странный сон вам снился? 💭',
+                responses: [
+                    'Вы летали на единороге по радуге! 🌈🦄',
+                    'Вы были супергероем в пижаме! 🦸‍♂️',
+                    'Вы разговаривали с котом на японском! 🐱',
+                    'Вы ели мороженое размером с дом! 🏠',
+                    'Вы танцевали с пингвинами на Северном полюсе! 🐧'
+                ]
+            },
+            {
+                question: 'Если бы вы были погодой, какой бы были? 🌦️',
+                responses: [
+                    'Вы - солнечный день! Положительная энергия! ☀️',
+                    'Вы - дождь с радугой! Оптимист! 🌈',
+                    'Вы - снегопад! Романтичная натура! ❄️',
+                    'Вы - гроза! Энергичный человек! ⚡',
+                    'Вы - туман! Загадочная личность! 🌫️'
+                ]
+            },
+            {
+                question: 'Какой самый странный смайлик вы используете? 😜',
+                responses: [
+                    'Вы - 😂! Веселый человек!',
+                    'Вы - 🤪! Безумный гений!',
+                    'Вы - 🥴! Немного странный!',
+                    'Вы - 🤔! Философ!',
+                    'Вы - 😎! Крутой парень!'
+                ]
+            }
+        ];
+        let currentQuestion = 0;
+
+        function showQuestion() {
+            const question = questions[currentQuestion];
+            document.getElementById('questionPopup').style.display = 'block';
+            document.getElementById('questionText').textContent = question.question;
+            document.getElementById('answerInput').value = '';
+            document.getElementById('result').textContent = '';
+            document.getElementById('answerInput').focus();
+        }
+
+        function submitAnswer() {
+            const question = questions[currentQuestion];
+            const answer = document.getElementById('answerInput').value;
+            if (answer.trim() !== '') {
+                const randomResponse = question.responses[Math.floor(Math.random() * question.responses.length)];
+                document.getElementById('result').textContent = randomResponse;
+                setTimeout(() => {
+                    currentQuestion = (currentQuestion + 1) % questions.length;
+                    document.getElementById('questionPopup').style.display = 'none';
+                }, 2000);
+            }
+        }
+
+        function skipQuestion() {
+            currentQuestion = (currentQuestion + 1) % questions.length;
+            document.getElementById('questionPopup').style.display = 'none';
+        }
+
+        // Show first question on page load
+        window.onload = showQuestion;
+
+        // Handle Enter key in input
+        document.getElementById('answerInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                submitAnswer();
+            }
+        });
+    </script>
+</body>
+</html>
